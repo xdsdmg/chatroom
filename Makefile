@@ -1,2 +1,2 @@
 build:
-	gcc main.cpp -lstdc++ 
+	gcc main.cpp -lstdc++ -lssh2
