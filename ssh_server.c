@@ -5,6 +5,8 @@
 
 #define USERNAME "user"
 #define PASSWORD "password"
+#define ADDR "0.0.0.0"
+#define PORT "6789"
 
 int authenticate_password(ssh_session session, const char *username,
                           const char *password) {
@@ -21,7 +23,10 @@ int main() {
   ssh_session session;
   ssh_message message;
 
+  ssh_init();
+
   // Create SSH bind object
+  // TODO: need op
   sshbind = ssh_bind_new();
   if (sshbind == NULL) {
     fprintf(stderr, "Failed to create SSH bind object\n");
@@ -29,10 +34,14 @@ int main() {
   }
 
   // Set options
-  ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_BINDADDR, "0.0.0.0");
-  ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_BINDPORT_STR, "6789");
+  // TODO: need op
+  ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_BINDADDR, ADDR);
+  ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_BINDPORT_STR, PORT);
+  ssh_bind_options_set(sshbind, SSH_BIND_OPTIONS_RSAKEY,
+                       "/home/zhangchi/.ssh/id_rsa");
 
   // Start listening for connections
+  // TODO: need op
   if (ssh_bind_listen(sshbind) < 0) {
     fprintf(stderr, "Failed to start listening for connections: %s\n",
             ssh_get_error(sshbind));
@@ -40,7 +49,7 @@ int main() {
     return 1;
   }
 
-  printf("Listening for connections on port 2222...\n");
+  printf("Listening for connections on %s:%s\n", ADDR, PORT);
 
   // Accept connections
   session = ssh_new();
@@ -50,14 +59,17 @@ int main() {
     return 1;
   }
 
+  ssh_set_auth_methods(session,
+                       SSH_AUTH_METHOD_PUBLICKEY | SSH_AUTH_METHOD_PASSWORD);
+
   while (ssh_bind_accept(sshbind, session) == SSH_OK) {
     printf("Accepted connection\n");
 
     // Perform authentication
-    if (authenticate_password(session, USERNAME, PASSWORD) != 0) {
-      ssh_disconnect(session);
-      continue;
-    }
+    // if (authenticate_password(session, USERNAME, PASSWORD) != 0) {
+    //   ssh_disconnect(session);
+    //   continue;
+    // }
 
     printf("Authentication succeeded\n");
 
@@ -73,4 +85,3 @@ int main() {
 
   return 0;
 }
-
